@@ -31,7 +31,12 @@ func CreateFilesAndPackages(subdirs []Subdirectory, name string) error {
 				return fmt.Errorf("%s can't be created", file.Name)
 			}
 			//fmt.Printf("%s has been created\n", file.Name)
-			defer fil.Close()
+			defer func(fil *os.File) {
+				err := fil.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+			}(fil)
 
 			text := strings.ReplaceAll(file.Content, "%s", name)
 
@@ -39,7 +44,10 @@ func CreateFilesAndPackages(subdirs []Subdirectory, name string) error {
 				return err
 			}
 		}
-		CreateFilesAndPackages(subdir.Subdirectories, name)
+		err := CreateFilesAndPackages(subdir.Subdirectories, name)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -77,7 +85,12 @@ func CreateAndWriteFiles(files []File, name string) error {
 		if err != nil {
 			return err
 		}
-		defer file.Close()
+		defer func(file *os.File) {
+			err := file.Close()
+			if err != nil {
+				fmt.Println(err)
+			}
+		}(file)
 		fmt.Println(messages.FileBuilding(f.Name))
 		text := strings.ReplaceAll(f.Content, "%s", name)
 		if _, err := file.WriteString(text); err != nil {

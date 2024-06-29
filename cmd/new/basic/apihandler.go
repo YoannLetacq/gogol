@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gogol/internal/messages"
+	"io"
 	"net/http"
 )
 
@@ -40,7 +41,12 @@ func GetBasicJson(url string) (BASIC, error) {
 	if err != nil {
 		return *basic, errors.New("get")
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(resp.Body)
 	if err := json.NewDecoder(resp.Body).Decode(basic); err != nil {
 		return *basic, errors.New("decoder")
 	}
